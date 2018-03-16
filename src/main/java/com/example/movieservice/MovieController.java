@@ -19,7 +19,8 @@ public class MovieController {
     @GetMapping
     public Flux<Movie> getMovies() {
 
-        return movieRepository.findAll();
+        movieRepository.findAll();
+        return null;
     }
 
 }

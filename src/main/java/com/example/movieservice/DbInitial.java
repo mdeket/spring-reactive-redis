@@ -17,7 +17,7 @@ public class DbInitial implements ApplicationRunner {
     public void run(ApplicationArguments args) throws Exception {
         System.out.println("Populating db.");
         Stream.of("1","2").forEach(title -> {
-            Movie movie = new Movie();
+            Movie movie = new Movie(null, title, "drama");
             movieRepository.save(movie);
         });
     }
