@@ -2,30 +2,26 @@ package com.example.movieservice;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.data.redis.connection.ReactiveRedisConnection;
 import org.springframework.data.redis.connection.ReactiveRedisConnectionFactory;
-import org.springframework.data.redis.connection.RedisConnectionFactory;
-import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory;
-import org.springframework.data.redis.repository.configuration.EnableRedisRepositories;
+import org.springframework.data.redis.core.ReactiveRedisTemplate;
+import org.springframework.data.redis.serializer.Jackson2JsonRedisSerializer;
+import org.springframework.data.redis.serializer.RedisSerializationContext;
+import org.springframework.data.redis.serializer.StringRedisSerializer;
 
 @Configuration
-@EnableRedisRepositories(basePackageClasses = MovieRepository.class)
 public class AppConfig {
-
-
     @Bean
-    public RedisConnectionFactory redisConnectionFactory() {
-        return new LettuceConnectionFactory();
-    }
+    public ReactiveRedisTemplate<String, Movie> reactiveJsonPostRedisTemplate(
+            ReactiveRedisConnectionFactory connectionFactory) {
 
-    @Bean
-    public ReactiveRedisConnectionFactory reactiveRedisConnectionFactory() {
-        return new LettuceConnectionFactory();
-    }
+        RedisSerializationContext<String, Movie> serializationContext = RedisSerializationContext
+                .<String, Movie>newSerializationContext(new StringRedisSerializer())
+                .hashKey(new StringRedisSerializer())
+                .hashValue(new Jackson2JsonRedisSerializer<>(Movie.class))
+                .build();
 
-    @Bean
-    public ReactiveRedisConnection reactiveRedisConnection(final ReactiveRedisConnectionFactory redisConnectionFactory) {
-        return redisConnectionFactory.getReactiveConnection();
+
+        return new ReactiveRedisTemplate<>(connectionFactory, serializationContext);
     }
 
 }

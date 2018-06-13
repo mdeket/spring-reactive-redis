@@ -1,24 +1,39 @@
 package com.example.movieservice;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.ApplicationArguments;
-import org.springframework.boot.ApplicationRunner;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
-
-import java.util.stream.Stream;
+import reactor.core.publisher.Flux;
+import java.util.UUID;
 
 @Component
-public class DbInitial implements ApplicationRunner {
+@Slf4j
+public class DbInitial implements CommandLineRunner {
 
-    @Autowired
-    MovieRepository movieRepository;
+    private final MovieRepository posts;
+
+    public DbInitial(MovieRepository posts) {
+        this.posts = posts;
+    }
 
     @Override
-    public void run(ApplicationArguments args) throws Exception {
-        System.out.println("Populating db.");
-        Stream.of("1","2").forEach(title -> {
-            Movie movie = new Movie(null, title, "drama");
-            movieRepository.save(movie);
-        });
+    public void run(String[] args) {
+        log.info("Redis initialization");
+        this.posts
+            .deleteAll()
+            .thenMany(
+                    Flux.just("Top Gun", "Transformers", "Pirates of Caribbean")
+                            .flatMap(movieTitle -> {
+                                Movie movie = new Movie(UUID.randomUUID().toString(), movieTitle);
+                                return posts.save(movie);
+                            })
+            )
+            .log()
+            .subscribe(
+                    System.out::println,
+                    null,
+                    () -> log.info("Done initialization")
+            );
     }
+
 }
